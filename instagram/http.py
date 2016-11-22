@@ -33,10 +33,12 @@ import inspect
 import weakref
 from random import randint as random_integer
 
+from .errors import HTTPException, Forbidden, NotFound, LoginFailure, \
+    GatewayNotFound
+from . import utils, __version__
+
 log = logging.getLogger(__name__)
 
-from .errors import HTTPException, Forbidden, NotFound, LoginFailure, GatewayNotFound
-from . import utils, __version__
 
 @asyncio.coroutine
 def json_or_text(response):
@@ -45,9 +47,11 @@ def json_or_text(response):
         return json.loads(text)
     return text
 
+
 def _func_():
     # emulate __func__ from C++
     return inspect.currentframe().f_back.f_code.co_name
+
 
 class HTTPClient:
     """Represents an HTTP client sending HTTP requests to the Discord API."""
@@ -70,13 +74,16 @@ class HTTPClient:
     def __init__(self, connector=None, *, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.connector = connector
-        self.session = aiohttp.ClientSession(connector=connector, loop=self.loop)
+        self.session = aiohttp.ClientSession(connector=connector,
+                                             loop=self.loop)
         self._locks = weakref.WeakValueDictionary()
         self.token = None
         self.bot_token = False
 
-        user_agent = 'DiscordBot (https://github.com/Rapptz/discord.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}'
-        self.user_agent = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
+        user_agent = ('DiscordBot (https://github.com/Rapptz/discord.py {0})'
+                      ' Python/{1[0]}.{1[1]} aiohttp/{2}')
+        self.user_agent = user_agent.format(__version__, sys.version_info,
+                                            aiohttp.__version__)
 
     @asyncio.coroutine
     def request(self, method, url, *, bucket=None, **kwargs):
@@ -92,7 +99,8 @@ class HTTPClient:
         }
 
         if self.token is not None:
-            headers['Authorization'] = 'Bot ' + self.token if self.bot_token else self.token
+            headers['Authorization'] = ('Bot ' + (self.token if self.bot_token
+                                                  else self.token))
 
         # some checking if it's a JSON request
         if 'json' in kwargs:
@@ -103,19 +111,24 @@ class HTTPClient:
         with (yield from lock):
             for tries in range(5):
                 r = yield from self.session.request(method, url, **kwargs)
-                log.debug(self.REQUEST_LOG.format(method=method, url=url, status=r.status, json=kwargs.get('data')))
+                log.debug(self.REQUEST_LOG.format(method=method, url=url,
+                                                  status=r.status,
+                                                  json=kwargs.get('data')))
                 try:
-                    # even errors have text involved in them so this is safe to call
+                    # even errors have text involved in them so this is safe to
+                    #   call
                     data = yield from json_or_text(r)
 
                     # the request was successful so just return the text/json
                     if 300 > r.status >= 200:
-                        log.debug(self.SUCCESS_LOG.format(method=method, url=url, text=data))
+                        log.debug(self.SUCCESS_LOG.format(method=method,
+                                  url=url, text=data))
                         return data
 
                     # we are being rate limited
                     if r.status == 429:
-                        fmt = 'We are being rate limited. Retrying in {:.2} seconds. Handled under the bucket "{}"'
+                        fmt = ('We are being rate limited. Retrying in {:.2}'
+                               'seconds. Handled under the bucket "{}"')
 
                         # sleep a bit
                         retry_after = data['retry_after'] / 1000.0
@@ -161,7 +174,8 @@ class HTTPClient:
         yield from self.session.close()
 
     def recreate(self):
-        self.session = aiohttp.ClientSession(connector=self.connector, loop=self.loop)
+        self.session = aiohttp.ClientSession(connector=self.connector,
+                                             loop=self.loop)
 
     def _token(self, token, *, bot=True):
         self.token = token
@@ -177,10 +191,12 @@ class HTTPClient:
         }
 
         try:
-            data = yield from self.post(self.LOGIN, json=payload, bucket=_func_())
+            data = yield from self.post(self.LOGIN, json=payload,
+                                        bucket=_func_())
         except HTTPException as e:
             if e.response.status == 400:
-                raise LoginFailure('Improper credentials have been passed.') from e
+                raise LoginFailure('Improper credentials have been passed.') \
+                    from e
             raise
 
         self._token(data['token'], bot=False)
@@ -213,7 +229,8 @@ class HTTPClient:
 
         return self.post(self.ME + '/channels', json=payload, bucket=_func_())
 
-    def send_message(self, channel_id, content, *, guild_id=None, tts=False, embed=None):
+    def send_message(self, channel_id, content, *, guild_id=None, tts=False,
+                     embed=None):
         url = '{0.CHANNELS}/{1}/messages'.format(self, channel_id)
         payload = {
             'nonce': random_integer(-2**63, 2**63 - 1)
@@ -234,7 +251,8 @@ class HTTPClient:
         url = '{0.CHANNELS}/{1}/typing'.format(self, channel_id)
         return self.post(url, bucket=_func_())
 
-    def send_file(self, channel_id, buffer, *, guild_id=None, filename=None, content=None, tts=False):
+    def send_file(self, channel_id, buffer, *, guild_id=None, filename=None,
+                  content=None, tts=False):
         url = '{0.CHANNELS}/{1}/messages'.format(self, channel_id)
         form = aiohttp.FormData()
 
@@ -242,12 +260,14 @@ class HTTPClient:
             form.add_field('content', str(content))
 
         form.add_field('tts', 'true' if tts else 'false')
-        form.add_field('file', buffer, filename=filename, content_type='application/octet-stream')
+        form.add_field('file', buffer, filename=filename,
+                       content_type='application/octet-stream')
 
         return self.post(url, data=form, bucket='messages:' + str(guild_id))
 
     def delete_message(self, channel_id, message_id, guild_id=None):
-        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id, message_id)
+        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id,
+                                                     message_id)
         bucket = '{}:{}'.format(_func_(), guild_id)
         return self.delete(url, bucket=bucket)
 
@@ -259,8 +279,10 @@ class HTTPClient:
         bucket = '{}:{}'.format(_func_(), guild_id)
         return self.post(url, json=payload, bucket=bucket)
 
-    def edit_message(self, message_id, channel_id, content, *, guild_id=None, embed=None):
-        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id, message_id)
+    def edit_message(self, message_id, channel_id, content, *, guild_id=None,
+                     embed=None):
+        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id,
+                                                     message_id)
         payload = {}
 
         if content:
@@ -269,7 +291,8 @@ class HTTPClient:
         if embed:
             payload['embed'] = embed
 
-        return self.patch(url, json=payload, bucket='messages:' + str(guild_id))
+        return self.patch(url, json=payload,
+                          bucket='messages:' + str(guild_id))
 
     def add_reaction(self, message_id, channel_id, emoji):
         url = '{0.CHANNELS}/{1}/messages/{2}/reactions/{3}/@me'.format(
@@ -281,23 +304,29 @@ class HTTPClient:
             self, channel_id, message_id, emoji, member_id)
         return self.delete(url, bucket='%s:%s' % (_func_(), channel_id))
 
-    def get_reaction_users(self, message_id, channel_id, emoji, limit, after=None):
+    def get_reaction_users(self, message_id, channel_id, emoji, limit,
+                           after=None):
         url = '{0.CHANNELS}/{1}/messages/{2}/reactions/{3}'.format(
             self, channel_id, message_id, emoji)
         params = {'limit': limit}
         if after:
             params['after'] = after
-        return self.get(url, params=params, bucket='%s:%s' % (_func_(), channel_id))
+        return self.get(url, params=params, bucket='%s:%s' % (_func_(),
+                                                              channel_id))
 
     def clear_reactions(self, message_id, channel_id):
-        url = '{0.CHANNELS}/{1}/messages/{2}/reactions'.format(self, channel_id, message_id)
+        url = '{0.CHANNELS}/{1}/messages/{2}/reactions'.format(self,
+                                                               channel_id,
+                                                               message_id)
         return self.delete(url, bucket='%s:%s' % (_func_(), channel_id))
 
     def get_message(self, channel_id, message_id):
-        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id, message_id)
+        url = '{0.CHANNELS}/{1}/messages/{2}'.format(self, channel_id,
+                                                     message_id)
         return self.get(url, bucket=_func_())
 
-    def logs_from(self, channel_id, limit, before=None, after=None, around=None):
+    def logs_from(self, channel_id, limit, before=None, after=None,
+                  around=None):
         url = '{0.CHANNELS}/{1}/messages'.format(self, channel_id)
         params = {
             'limit': limit
@@ -395,7 +424,8 @@ class HTTPClient:
 
         return self.patch(url, json=payload, bucket=_func_())
 
-    def create_channel(self, guild_id, name, channe_type, permission_overwrites=None):
+    def create_channel(self, guild_id, name, channe_type,
+                       permission_overwrites=None):
         url = '{0.GUILDS}/{1}/channels'.format(self, guild_id)
         payload = {
             'name': name,
@@ -466,7 +496,8 @@ class HTTPClient:
         }
 
         bucket = '%s:%s' % (_func_(), guild_id)
-        return self.post('{0.GUILDS}/{1}/emojis'.format(self, guild_id), json=payload, bucket=bucket)
+        return self.post('{0.GUILDS}/{1}/emojis'.format(self, guild_id),
+                         json=payload, bucket=bucket)
 
     def delete_custom_emoji(self, guild_id, emoji_id):
         url = '{0.GUILDS}/{1}/emojis/{2}'.format(self, guild_id, emoji_id)
@@ -536,15 +567,18 @@ class HTTPClient:
         return self.post(url, bucket=_func_())
 
     def add_role(self, guild_id, member_id, role_id):
-        url = '{0.GUILDS}/{1}/members/{2}/{3}'.format(self, guild_id, member_id, role_id)
+        url = '{0.GUILDS}/{1}/members/{2}/{3}'.format(self, guild_id,
+                                                      member_id, role_id)
         return self.put(url, bucket='%s:%s' % (_func_(), guild_id))
 
     def remove_role(self, guild_id, member_id, role_id):
-        url = '{0.GUILDS}/{1}/members/{2}/{3}'.format(self, guild_id, member_id, role_id)
+        url = '{0.GUILDS}/{1}/members/{2}/{3}'.format(self, guild_id,
+                                                      member_id, role_id)
         return self.delete(url, bucket='%s:%s' % (_func_(), guild_id))
 
     def edit_channel_permissions(self, channel_id, target, allow, deny, type):
-        url = '{0.CHANNELS}/{1}/permissions/{2}'.format(self, channel_id, target)
+        url = '{0.CHANNELS}/{1}/permissions/{2}'.format(self, channel_id,
+                                                        target)
         payload = {
             'id': target,
             'allow': allow,
@@ -554,7 +588,8 @@ class HTTPClient:
         return self.put(url, json=payload, bucket=_func_())
 
     def delete_channel_permissions(self, channel_id, target):
-        url = '{0.CHANNELS}/{1}/permissions/{2}'.format(self, channel_id, target)
+        url = '{0.CHANNELS}/{1}/permissions/{2}'.format(self, channel_id,
+                                                        target)
         return self.delete(url, bucket=_func_())
 
     # Voice management
