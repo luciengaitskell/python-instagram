@@ -78,7 +78,7 @@ class HTTPClient:
         self.token = None
         self.bot_token = False
 
-        user_agent = ('DiscordBot (https://github.com/Rapptz/discord.py {0})'
+        user_agent = ('InstagramBot (<URL> {0})'
                       ' Python/{1[0]}.{1[1]} aiohttp/{2}')
         self.user_agent = user_agent.format(__version__, sys.version_info,
                                             aiohttp.__version__)
