@@ -76,7 +76,6 @@ class HTTPClient:
                                              loop=self.loop)
         self._locks = weakref.WeakValueDictionary()
         self.token = None
-        self.bot_token = False
 
         user_agent = ('InstagramBot (<URL> {0})'
                       ' Python/{1[0]}.{1[1]} aiohttp/{2}')
@@ -97,8 +96,7 @@ class HTTPClient:
         }
 
         if self.token is not None:
-            headers['access_token'] = (self.token if self.bot_token
-                                       else self.token)
+            headers['access_token'] = self.token
 
         # some checking if it's a JSON request
         if 'json' in kwargs:
@@ -175,21 +173,20 @@ class HTTPClient:
         self.session = aiohttp.ClientSession(connector=self.connector,
                                              loop=self.loop)
 
-    def _token(self, token, *, bot=True):
+    def _token(self, token, *):
         self.token = token
-        self.bot_token = bot
 
     # login management
 
     @asyncio.coroutine
     def static_login(self, token, *, bot):
-        old_token, old_bot = self.token, self.bot_token
+        old_token = self.token
         self._token(token, bot=bot)
 
         try:
             data = yield from self.get(self.ME)
         except HTTPException as e:
-            self._token(old_token, bot=old_bot)
+            self._token(old_token)
             if e.response.status == 401:
                 raise LoginFailure('Improper token has been passed.') from e
             raise e
