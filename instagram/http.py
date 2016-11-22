@@ -97,8 +97,8 @@ class HTTPClient:
         }
 
         if self.token is not None:
-            headers['Authorization'] = ('Bot ' + (self.token if self.bot_token
-                                                  else self.token))
+            headers['access_token'] = (self.token if self.bot_token
+                                       else self.token)
 
         # some checking if it's a JSON request
         if 'json' in kwargs:
