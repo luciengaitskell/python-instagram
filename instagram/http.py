@@ -196,9 +196,6 @@ class HTTPClient:
 
         return data
 
-    def logout(self):
-        return self.post(self.LOGOUT, bucket=_func_())
-
     # Message management
 
     def start_private_message(self, user_id):
