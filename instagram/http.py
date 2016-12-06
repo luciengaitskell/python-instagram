@@ -173,15 +173,15 @@ class HTTPClient:
         self.session = aiohttp.ClientSession(connector=self.connector,
                                              loop=self.loop)
 
-    def _token(self, token, *):
+    def _token(self, token):
         self.token = token
 
     # login management
 
     @asyncio.coroutine
-    def static_login(self, token, *, bot):
+    def static_login(self, token):
         old_token = self.token
-        self._token(token, bot=bot)
+        self._token(token)
 
         try:
             data = yield from self.get(self.ME)
