@@ -56,8 +56,8 @@ def _func_():
 class HTTPClient:
     """Represents an HTTP client sending HTTP requests to the Discord API."""
 
-    BASE          = 'api.instagram.com'
-    API_BASE      = BASE     + ''
+    BASE          = 'https://api.instagram.com'
+    API_BASE      = BASE     + '/v1'
     USERS         = API_BASE + '/users'
     ME            = USERS    + '/self'
     OAUTH         = API_BASE + '/oauth'
