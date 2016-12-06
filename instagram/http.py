@@ -67,7 +67,7 @@ class HTTPClient:
     LOCATIONS     = API_BASE + '/locations'
 
     SUCCESS_LOG = '{method} {url} has received {text}'
-    REQUEST_LOG = '{method} {url} with {json} has returned {status}'
+    REQUEST_LOG = '{method} {url} with {data} has returned {status}'
 
     def __init__(self, connector=None, *, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
@@ -95,21 +95,19 @@ class HTTPClient:
             'User-Agent': self.user_agent,
         }
 
+        requestData = kwargs.pop('params', {})
+
         if self.token is not None:
-            headers['access_token'] = self.token
+            requestData['access_token'] = self.token
 
-        # some checking if it's a JSON request
-        if 'json' in kwargs:
-            headers['Content-Type'] = 'application/json'
-            kwargs['data'] = utils.to_json(kwargs.pop('json'))
-
+        kwargs['params'] = requestData
         kwargs['headers'] = headers
         with (yield from lock):
             for tries in range(5):
                 r = yield from self.session.request(method, url, **kwargs)
                 log.debug(self.REQUEST_LOG.format(method=method, url=url,
                                                   status=r.status,
-                                                  json=kwargs.get('data')))
+                                                  data=requestData))
                 try:
                     # even errors have text involved in them so this is safe to
                     #   call
