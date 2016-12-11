@@ -43,7 +43,7 @@ log = logging.getLogger(__name__)
 @asyncio.coroutine
 def json_or_text(response):
     text = yield from response.text(encoding='utf-8')
-    if response.headers['content-type'] == 'application/json':
+    if 'application/json' in response.headers['Content-Type']:
         return json.loads(text)
     return text
 
