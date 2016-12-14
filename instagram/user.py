@@ -24,130 +24,230 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from .utils import snowflake_time
-from .enums import DefaultAvatar
+import asyncio
+import inspect
+from .http import HTTPClient
+
+
+def _func_():
+    # emulate __func__ from C++
+    return inspect.currentframe().f_back.f_code.co_name
+
 
 class User:
-    """Represents a Discord user.
-
-    Supported Operations:
-
-    +-----------+---------------------------------------------+
-    | Operation |                 Description                 |
-    +===========+=============================================+
-    | x == y    | Checks if two users are equal.              |
-    +-----------+---------------------------------------------+
-    | x != y    | Checks if two users are not equal.          |
-    +-----------+---------------------------------------------+
-    | hash(x)   | Return the user's hash.                     |
-    +-----------+---------------------------------------------+
-    | str(x)    | Returns the user's name with discriminator. |
-    +-----------+---------------------------------------------+
+    """Interaction of an Instagram user.
 
     Attributes
     -----------
-    name : str
-        The user's username.
-    id : str
-        The user's unique ID.
-    discriminator : str or int
-        The user's discriminator. This is given when the username has conflicts.
-    avatar : str
-        The avatar hash the user has. Could be None.
-    bot : bool
-        Specifies if the user is a bot account.
+    client : HTTPClient
+        The object to communicate to the Instagram API through.
     """
 
-    __slots__ = ['name', 'id', 'discriminator', 'avatar', 'bot']
+    def __init__(self, *args, **kwargs):
+        self.client = HTTPClient(*args, **kwargs)
 
-    def __init__(self, **kwargs):
-        self.name = kwargs.get('username')
-        self.id = kwargs.get('id')
-        self.discriminator = kwargs.get('discriminator')
-        self.avatar = kwargs.get('avatar')
-        self.bot = kwargs.get('bot', False)
+    # Login management:
+    @asyncio.coroutine
+    def static_login(self, token):
+        old_token = self.client.token
+        self.client._token(token)
 
-    def __str__(self):
-        return '{0.name}#{0.discriminator}'.format(self)
+        try:
+            data = yield from self.client.get(self.client.ME)
+        except HTTPException as e:
+            self.client._token(old_token)
+            if e.response.status == 401:
+                raise LoginFailure('Improper token has been passed.') from e
+            raise e
 
-    def __eq__(self, other):
-        return isinstance(other, User) and other.id == self.id
+        return data
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    @asyncio.coroutine
+    def close(self):
+        yield from self.client.close()
 
-    def __hash__(self):
-        return hash(self.id)
+    ''' API INTERACTION: '''
 
-    @property
-    def avatar_url(self):
-        """Returns a friendly URL version of the avatar variable the user has. An empty string if
-        the user has no avatar."""
-        if self.avatar is None:
-            return ''
-        return 'https://discordapp.com/api/users/{0.id}/avatars/{0.avatar}.jpg'.format(self)
+    # User:
+    def get_user(self, user_id):
+        """Get a user's information."""
+        return self.client.get(self.client.USERS + '/{}'.format(user_id),
+                               bucket=_func_())
 
-    @property
-    def default_avatar(self):
-        """Returns the default avatar for a given user. This is calculated by the user's descriminator"""
-        return DefaultAvatar(int(self.discriminator) % len(DefaultAvatar))
+    def get_self(self):
+        """Get this user's information."""
+        return self.client.get_user('self')
 
-    @property
-    def default_avatar_url(self):
-        """Returns a URL for a user's default avatar."""
-        return 'https://discordapp.com/assets/{0.url}.png'.format(self.default_avatar)
-
-    @property
-    def mention(self):
-        """Returns a string that allows you to mention the given user."""
-        return '<@{0.id}>'.format(self)
-
-    def permissions_in(self, channel):
-        """An alias for :meth:`Channel.permissions_for`.
-
-        Basically equivalent to:
-
-        .. code-block:: python
-
-            channel.permissions_for(self)
+    def get_user_recent_media(self, user_id):
+        """Get this user's information.
 
         Parameters
         -----------
-        channel
-            The channel to check your permissions for.
-        """
-        return channel.permissions_for(self)
-
-    @property
-    def created_at(self):
-        """Returns the user's creation time in UTC.
-
-        This is when the user's discord account was created."""
-        return snowflake_time(self.id)
-
-    @property
-    def display_name(self):
-        """Returns the user's display name.
-
-        For regular users this is just their username, but
-        if they have a server specific nickname then that
-        is returned instead.
-        """
-        return getattr(self, 'nick', None) or self.name
-
-    def mentioned_in(self, message):
-        """Checks if the user is mentioned in the specified message.
-
-        Parameters
-        -----------
-        message : :class:`Message`
+        user_id : str
             The message to check if you're mentioned in.
         """
+        return self.client.get(self.client.USERS +
+                               '/{}/media/recent'.format(user_id),
+                               bucket=_func_())
 
-        if message.mention_everyone:
-            return True
+    def get_self_recent_media(self):
+        """Get this user's recent media."""
+        return self.get_user_recent_media('self')
 
-        if self in message.mentions:
-            return True
+    def get_self_liked_media(self):
+        """Get this user's recent liked media."""
+        return self.client.get(self.client.ME + '/media/liked', bucket=_func_())
 
-        return False
+    def search_users(self, query):
+        """Search for users based on query.
+
+        Parameters
+        -----------
+        query : str
+            The user search query.
+        """
+        params = {
+                'q': query,
+        }
+        return self.client.get(self.client.USERS + '/search', params=params,
+                               bucket=_func_())
+
+    # Relationships:
+    def get_self_follows(self):
+        """Get this user's followed users."""
+        url = self.client.ME + '/follows'
+        return self.client.get(url, bucket=_func_())
+
+    def get_self_followed_by(self):
+        """Get this user's followers."""
+        url = self.client.ME + '/followed-by'
+        return self.client.get(url, bucket=_func_())
+
+    def get_self_requested_by(self):
+        """Get this user's requested followers."""
+        url = self.client.ME + '/requested-by'
+        return self.client.get(url, bucket=_func_())
+
+    def get_user_relationship(self, user_id):
+        """Get a user's relationship to this user.
+
+        Parameters
+        -----------
+        user_id : str
+            The user to check the relationship of.
+        """
+        url = self.client.USERS + '/{}/relationship'.format(user_id)
+        return self.client.get(url, bucket=_func_())
+
+    def set_user_relationship(self, user_id, action):
+        """Set a user's relationship to this user.
+
+        Parameters
+        -----------
+        user_id : str
+            The user to change the relationship of.
+        action : str
+            The action to change the relationship. It should be one of these
+            three:
+                *: follow
+                *: unfollow
+                *: approve
+                *: ignore
+        """
+        params = {
+                'action': action
+        }
+        url = self.client.USERS + '/{}/relationship'.format(user_id)
+        return self.client.post(url, params=params, bucket=_func_())
+
+    # Other Media:
+    def get_media(self, *, media_id=None, shortcode=None):
+        """Get media by 'media_id' or 'shortcode'. Either 'media_id' or
+        'shortcode' have to be inputted.
+
+        Parameters
+        -----------
+        media_id (kwarg) : str (optional: None)
+            The id of the media to get.
+        shortcode (kwarg) : str (optional: None)
+            The shortcode of the media to get.
+        """
+        if media_id is not None:
+            url = self.client.MEDIA + '/{}'.format(media_id)
+        else:
+            url = self.client.MEDIA + '/shortcode/{}'.format(shortcode)
+
+        return self.client.get(url, bucket=_func_())
+
+    def search_media(self, *, lat, lng, distance=None):
+        url = self.client.MEDIA + '/search'
+        params = {
+                'lat': lat,
+                'lng': lng
+        }
+        if distance is not None:
+            params['distance'] = distance
+
+        return self.client.get(url, params=params, bucket=_func_())
+
+    # Comments:
+    def get_comments(self, media_id):
+        url = self.client.MEDIA + '/{}/comments'.format(media_id)
+        return self.client.get(url, bucket=_func_())
+
+    def add_comment(self, media_id, comment):
+        url = self.client.MEDIA + '/{}/comments'.format(media_id)
+        params = {
+                'text': comment
+        }
+        return self.client.post(url, params=params, bucket=_func_())
+
+    def del_comment(self, media_id, comment_id):
+        url = self.client.MEDIA + '/{}/comments/{}'.format(media_id,
+                                                           comment_id)
+        return self.client.get(url, bucket=_func_())
+
+    # Likes:
+    def get_likes(self, media_id):
+        url = self.client.MEDIA + '/{}/likes'.format(media_id)
+        return self.client.get(url, bucket=_func_())
+
+    def add_like(self, media_id):
+        url = self.client.MEDIA + '/{}/likes'.format(media_id)
+        return self.client.post(url, bucket=_func_())
+
+    def del_like(self, media_id):
+        url = self.client.MEDIA + '/{}/likes'.format(media_id)
+        return self.client.delete(url, bucket=_func_())
+
+    # Tags:
+    def get_tag(self, tag_name):
+        url = self.client.TAGS + '/{}'.format(tag_name)
+        return self.client.get(url, bucket=_func_())
+
+    def get_tagged_media(self, tag_name):
+        url = self.client.TAGS + '/{}/media/recent'.format(tag_name)
+        return self.client.get(url, bucket=_func_())
+
+    def search_tags(self, query):
+        url = self.client.TAGS + '/search'
+        params = {
+                'q': query
+        }
+        return self.client.get(url, params=params, bucket=_func_())
+
+    # Locations:
+    def get_location(self, location_id):
+        url = self.client.LOCATIONS + '/{}'.format(location_id)
+        return self.client.get(url, bucket=_func_())
+
+    def get_location_media(self, location_id):
+        url = self.client.LOCATIONS + '/{}/media/recent'.format(location_id)
+        return self.client.get(url, bucket=_func_())
+
+    def search_locations(self, query):
+        url = self.client.LOCATIONS + '/search'
+        params = {
+                'q': query
+        }
+        return self.client.get(url, params=params, bucket=_func_())
