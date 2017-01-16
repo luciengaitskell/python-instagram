@@ -40,6 +40,10 @@ from . import utils, __version__
 log = logging.getLogger(__name__)
 
 
+def create_client_session(connector=None, *, loop=None):
+    return aiohttp.ClientSession(connector=connector, loop=loop)
+
+
 @asyncio.coroutine
 def json_or_text(response):
     text = yield from response.text(encoding='utf-8')
@@ -64,11 +68,14 @@ class HTTPClient:
     SUCCESS_LOG = '{method} {url} has received {text}'
     REQUEST_LOG = '{method} {url} with {data} has returned {status}'
 
-    def __init__(self, connector=None, *, loop=None):
+    def __init__(self, session=None, *, connector=None, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.connector = connector
-        self.session = aiohttp.ClientSession(connector=connector,
-                                             loop=self.loop)
+        if (session is None):
+            self.session = create_client_session(connector=connector,
+                                                 loop=self.loop)
+        else:
+            self.session = session
         self._locks = weakref.WeakValueDictionary()
         self.token = None
 
