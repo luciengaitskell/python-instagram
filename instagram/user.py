@@ -76,7 +76,7 @@ class User:
 
     def get_self(self):
         """Get this user's information."""
-        return self.client.get_user('self')
+        return self.get_user('self')
 
     def get_user_recent_media(self, user_id):
         """Get this user's information.
