@@ -1,5 +1,6 @@
 """
 Instagram API Wrapper.
+
 ~~~~~~~~~~~~~~~~~~~~~~
 
 A basic wrapper for the Instagram API.
