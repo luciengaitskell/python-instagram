@@ -67,8 +67,6 @@ class Client:
         elif (token is not None):
             yield from user.set_token(token)
 
-        print("Token: " + token)
-
         self.users.append(user)
         return user
 
