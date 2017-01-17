@@ -84,7 +84,7 @@ class HTTPClient:
                                             aiohttp.__version__)
 
     @asyncio.coroutine
-    def request(self, method, url, *, bucket=None, **kwargs):
+    def request(self, method, url, *, bucket=None, pass_token=True, **kwargs):
         lock = self._locks.get(bucket)
         if lock is None:
             lock = asyncio.Lock(loop=self.loop)
@@ -98,7 +98,7 @@ class HTTPClient:
 
         requestData = kwargs.pop('params', {})
 
-        if self.token is not None:
+        if (self.token is not None) and pass_token:
             requestData['access_token'] = self.token
 
         kwargs['params'] = requestData
