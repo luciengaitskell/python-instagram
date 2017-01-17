@@ -21,7 +21,7 @@ readme = ''
 with open('README.md') as f:
     readme = f.read()
 
-setup(name='instagram.py',
+setup(name='python-instagram',
       author='Lucien Gaitskell',
       url='https://github.com/luciengaitskell/python-instagram',
       version=version,
