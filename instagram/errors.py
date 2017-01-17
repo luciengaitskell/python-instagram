@@ -27,7 +27,8 @@ DEALINGS IN THE SOFTWARE.
 class InstagramException(Exception):
     """Base exception class for instagram.py
 
-    Ideally speaking, this could be caught to handle any exceptions thrown from this library.
+    Ideally speaking, this could be caught to handle any exceptions thrown from
+    this library.
     """
     pass
 
