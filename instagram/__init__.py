@@ -4,15 +4,15 @@ Instagram API Wrapper.
 
 A basic wrapper for the Instagram API.
 
-:copyright: (c) 2015-2016 Rapptz
+:copyright: (c) 2016-2017 Lucien Gaitskell
 :license: MIT, see LICENSE for more details.
 """
 
-__title__ = 'discord'
-__author__ = 'Rapptz'
+__title__ = 'instagram'
+__author__ = 'Lucien Gaitskell'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2015-2016 Rapptz'
-__version__ = '0.14.3'
+__copyright__ = 'Copyright 2016-2017 Lucien Gaitskell'
+__version__ = '0.1.0'
 
 from collections import namedtuple
 from .client import Client
