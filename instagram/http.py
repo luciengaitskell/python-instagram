@@ -58,7 +58,7 @@ class HTTPClient:
     API_BASE      = BASE     + '/v1'
     USERS         = API_BASE + '/users'
     ME            = USERS    + '/self'
-    OAUTH         = API_BASE + '/oauth'
+    OAUTH         = BASE     + '/oauth'
     LOGIN         = OAUTH    + '/authorize'
     MEDIA         = API_BASE + '/media'
     TAGS          = API_BASE + '/tags'
