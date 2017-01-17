@@ -49,7 +49,7 @@ class User:
 
     # Login management:
     @asyncio.coroutine
-    def static_login(self, token):
+    def set_token(self, token):
         old_token = self.client.token
         self.client._token(token)
 
