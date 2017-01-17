@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import inspect
 from .http import HTTPClient
+from .errors import HTTPException
 
 
 def _func_():
