@@ -24,28 +24,28 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-class DiscordException(Exception):
-    """Base exception class for discord.py
+class InstagramException(Exception):
+    """Base exception class for instagram.py
 
     Ideally speaking, this could be caught to handle any exceptions thrown from this library.
     """
     pass
 
-class ClientException(DiscordException):
+class ClientException(InstagramException):
     """Exception that's thrown when an operation in the :class:`Client` fails.
 
     These are usually for exceptions that happened due to user input.
     """
     pass
 
-class GatewayNotFound(DiscordException):
+class GatewayNotFound(InstagramException):
     """An exception that is usually thrown when the gateway hub
     for the :class:`Client` websocket is not found."""
     def __init__(self):
         message = 'The gateway to connect to discord was not found.'
         super(GatewayNotFound, self).__init__(message)
 
-class HTTPException(DiscordException):
+class HTTPException(InstagramException):
     """Exception that's thrown when an HTTP request operation fails.
 
     .. attribute:: response
@@ -95,7 +95,7 @@ class InvalidArgument(ClientException):
 
     This could be considered the analogous of ``ValueError`` and
     ``TypeError`` except derived from :exc:`ClientException` and thus
-    :exc:`DiscordException`.
+    :exc:`InstagramException`.
     """
     pass
 
