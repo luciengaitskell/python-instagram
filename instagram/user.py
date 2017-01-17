@@ -64,6 +64,26 @@ class User:
         return data
 
     @asyncio.coroutine
+    def set_token_from_code(self, client_id, client_secret, redirect_uri,
+                            code):
+        data = {
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'grant_type': 'authorization_code',
+                'redirect_uri': redirect_uri,
+                'code': code
+        }
+        response = yield from self.client.post(self.client.OAUTH
+                                               + '/access_token',
+                                               data=data, pass_token=False,
+                                               bucket=_func_())
+
+        token = response['access_token']
+        yield from self.set_token(token)
+
+        return token
+
+    @asyncio.coroutine
     def close(self):
         yield from self.client.close()
 
