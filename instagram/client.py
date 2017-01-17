@@ -33,13 +33,18 @@ from .user import User
 class Client:
     """Allows for usage and handling of multiple 'User' objects."""
 
-    def __init__(self, *, loop=None):
+    def __init__(self, *, loop=None, client_id=None, client_secret=None,
+                 redirect_uri=None):
         self.users = []
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.session = create_client_session()
 
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+
     @asyncio.coroutine
-    def add_user(self, *args, token=None, **kwargs):
+    def add_user(self, *args, token=None, code=None, **kwargs):
         """Add a 'User' object to the 'Client' object.
 
         If a token is passed as a keyword argument, the token of the 'User'
@@ -47,9 +52,23 @@ class Client:
         """
         user = User(self.session, *args, loop=self.loop, **kwargs)
 
+        if (code is not None):
+            if (None in [self.client_id, self.client_secret,
+                         self.redirect_uri]):
+                raise ValueError("Not all client values set. Please make sure"
+                                 + "'client_id', 'client_secret', and"
+                                 + "'redirect_uri' have been set.")
+
+            token = yield from user.set_token_from_code(self.client_id,
+                                                        self.client_secret,
+                                                        self.redirect_uri,
+                                                        code)
+
+        elif (token is not None):
+            yield from user.set_token(token)
+
         print("Token: " + token)
-        if (token is not None):
-            yield from user.static_login(token)
+
         self.users.append(user)
         return user
 
