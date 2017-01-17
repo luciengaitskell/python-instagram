@@ -33,9 +33,8 @@ import inspect
 import weakref
 from random import randint as random_integer
 
-from .errors import HTTPException, Forbidden, NotFound, LoginFailure, \
-    GatewayNotFound
-from . import utils, __version__
+from .errors import HTTPException, Forbidden, NotFound, LoginFailure
+from . import __version__
 
 log = logging.getLogger(__name__)
 

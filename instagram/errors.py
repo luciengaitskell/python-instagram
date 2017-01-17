@@ -38,13 +38,6 @@ class ClientException(InstagramException):
     """
     pass
 
-class GatewayNotFound(InstagramException):
-    """An exception that is usually thrown when the gateway hub
-    for the :class:`Client` websocket is not found."""
-    def __init__(self):
-        message = 'The gateway to connect to discord was not found.'
-        super(GatewayNotFound, self).__init__(message)
-
 class HTTPException(InstagramException):
     """Exception that's thrown when an HTTP request operation fails.
 
@@ -105,21 +98,3 @@ class LoginFailure(ClientException):
     failure.
     """
     pass
-
-class ConnectionClosed(ClientException):
-    """Exception that's thrown when the gateway connection is
-    closed for reasons that could not be handled internally.
-
-    Attributes
-    -----------
-    code : int
-        The close code of the websocket.
-    reason : str
-        The reason provided for the closure.
-    """
-    def __init__(self, original):
-        # This exception is just the same exception except
-        # reconfigured to subclass ClientException for users
-        self.code = original.code
-        self.reason = original.reason
-        super().__init__(str(original))
