@@ -11,7 +11,7 @@ if on_rtd:
   requirements.append('sphinxcontrib-napoleon')
 
 version = ''
-with open('discord/__init__.py') as f:
+with open('instagram/__init__.py') as f:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
 
 if not version:
@@ -21,21 +21,16 @@ readme = ''
 with open('README.md') as f:
     readme = f.read()
 
-extras_require = {
-    'voice': ['PyNaCl==1.0.1'],
-}
-
-setup(name='discord.py',
-      author='Rapptz',
-      url='https://github.com/Rapptz/discord.py',
+setup(name='instagram.py',
+      author='Lucien Gaitskell',
+      url='https://github.com/luciengaitskell/python-instagram',
       version=version,
       packages=find_packages(),
       license='MIT',
-      description='A python wrapper for the Discord API',
+      description='A python wrapper for the Instagram API',
       long_description=readme,
       include_package_data=True,
       install_requires=requirements,
-      extras_require=extras_require,
       classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
