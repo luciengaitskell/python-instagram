@@ -46,6 +46,7 @@ class User:
 
     def __init__(self, *args, **kwargs):
         self.client = HTTPClient(*args, **kwargs)
+        self._id = None
 
     # Login management:
     @asyncio.coroutine
@@ -61,6 +62,7 @@ class User:
                 raise LoginFailure('Improper token has been passed.') from e
             raise e
 
+        self._id = data['id']
         return data
 
     @asyncio.coroutine
@@ -80,6 +82,7 @@ class User:
 
         token = response['access_token']
         yield from self.set_token(token)
+        self._id = response['id']
 
         return token
 
