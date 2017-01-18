@@ -44,7 +44,7 @@ class Client:
         self.redirect_uri = redirect_uri
 
     @asyncio.coroutine
-    def add_user(self, *args, token=None, code=None, **kwargs):
+    def get_user(self, *args, token=None, code=None, **kwargs):
         """Add a 'User' object to the 'Client' object.
 
         If a token is passed as a keyword argument, the token of the 'User'
@@ -67,6 +67,11 @@ class Client:
         elif (token is not None):
             yield from user.set_token(token)
 
+        return user
+
+    @asyncio.coroutine
+    def add_user(self, *args, **kwargs):
+        user = yield from self.get_user(*args, **kwargs)
         self.users.append(user)
         return user
 
