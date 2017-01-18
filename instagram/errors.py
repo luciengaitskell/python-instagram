@@ -57,7 +57,7 @@ class HTTPException(InstagramException):
     def __init__(self, response, message):
         self.response = response
         if type(message) is dict:
-            self.text = message.get('message', '')
+            self.text = message.get('error_message', '')
             self.code = message.get('code', 0)
         else:
             self.text = message
