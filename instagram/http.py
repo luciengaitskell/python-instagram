@@ -84,7 +84,8 @@ class HTTPClient:
                                             aiohttp.__version__)
 
     @asyncio.coroutine
-    def request(self, method, url, *, bucket=None, pass_token=True, **kwargs):
+    def request(self, method, url, *, bucket=None, return_data=True,
+                pass_token=True, **kwargs):
         lock = self._locks.get(bucket)
         if lock is None:
             lock = asyncio.Lock(loop=self.loop)
@@ -113,6 +114,10 @@ class HTTPClient:
                     # even errors have text involved in them so this is safe to
                     #   call
                     data = yield from json_or_text(r)
+
+                    # Take data value of response (if it exists and is wanted):
+                    if return_data and ('data' in data):
+                        data = data['data']
 
                     # the request was successful so just return the text/json
                     if 300 > r.status >= 200:
