@@ -91,7 +91,7 @@ class User:
 
         token = response['access_token']
         yield from self.set_token(token)
-        self.__set_user_data(response)
+        self.__set_user_data(response['user'])
 
         return token
 
