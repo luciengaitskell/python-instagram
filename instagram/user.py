@@ -49,8 +49,12 @@ class User:
         self._id = None
         self._username = None
 
+    @property
+    def token(self):
+        return self.client.token
+
     def get_user_data(self):
-        return {'token': self.client.token, 'id': self._id,
+        return {'token': self.token, 'id': self._id,
                 'username': self._username}
 
     # Login management:
