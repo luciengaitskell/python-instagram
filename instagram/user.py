@@ -47,10 +47,12 @@ class User:
     def __init__(self, *args, **kwargs):
         self.client = HTTPClient(*args, **kwargs)
         self._id = None
+        self._username = None
 
     # Login management:
     def __set_user_data(self, response_data):
         self._id = response_data['id']
+        self._username = response_data['username']
 
     @asyncio.coroutine
     def set_token(self, token):
