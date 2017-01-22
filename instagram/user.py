@@ -96,6 +96,12 @@ class User:
         return token
 
     @asyncio.coroutine
+    def update_user_info(self):
+        data = yield from self.get_self()
+        __set_user_data(data)
+        return data
+
+    @asyncio.coroutine
     def close(self):
         yield from self.client.close()
 
