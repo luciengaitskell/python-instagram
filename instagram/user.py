@@ -49,6 +49,10 @@ class User:
         self._id = None
         self._username = None
 
+    def get_user_data(self):
+        return {'token': self.client.token, 'id': self._id,
+                'username': self._username}
+
     # Login management:
     def __set_user_data(self, response_data):
         self._id = response_data['id']
