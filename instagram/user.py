@@ -49,6 +49,9 @@ class User:
         self._id = None
 
     # Login management:
+    def __set_user_data(self, response_data):
+        self._id = response_data['id']
+
     @asyncio.coroutine
     def set_token(self, token):
         old_token = self.client.token
@@ -62,7 +65,7 @@ class User:
                 raise LoginFailure('Improper token has been passed.') from e
             raise e
 
-        self._id = data['id']
+        self.__set_user_data(data)
         return data
 
     @asyncio.coroutine
@@ -82,7 +85,7 @@ class User:
 
         token = response['access_token']
         yield from self.set_token(token)
-        self._id = response['id']
+        self.__set_user_data(response)
 
         return token
 
