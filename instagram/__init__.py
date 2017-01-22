@@ -18,6 +18,7 @@ __version__ = '0.3.0'
 from collections import namedtuple
 from .client import Client
 from .user import User
+from .errors import *
 
 VersionInfo = namedtuple('VersionInfo',
                          'major minor micro releaselevel serial')
