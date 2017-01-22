@@ -13,7 +13,7 @@ __title__ = 'instagram'
 __author__ = 'Lucien Gaitskell'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2016-2017 Lucien Gaitskell'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 from collections import namedtuple
 from .client import Client
@@ -23,5 +23,5 @@ from .errors import *
 VersionInfo = namedtuple('VersionInfo',
                          'major minor micro releaselevel serial')
 
-version_info = VersionInfo(major=0, minor=3, micro=0,
+version_info = VersionInfo(major=0, minor=3, micro=1,
                            releaselevel='development', serial=0)
