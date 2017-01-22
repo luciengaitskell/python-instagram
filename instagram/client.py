@@ -35,7 +35,7 @@ class Client:
 
     def __init__(self, *, loop=None, client_id=None, client_secret=None,
                  redirect_uri=None):
-        self.users = []
+        self.users = {}
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.session = create_client_session()
 
@@ -72,7 +72,12 @@ class Client:
     @asyncio.coroutine
     def add_user(self, *args, **kwargs):
         user = yield from self.get_user(*args, **kwargs)
-        self.users.append(user)
+        if user._id is None:
+            raise ValueError(
+                    "Please supply either a 'token' or 'code' argument")
+
+        self.users[user._id] = user
+
         return user
 
     @asyncio.coroutine
