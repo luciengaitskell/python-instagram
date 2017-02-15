@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-from . import __version__ as library_version
 from .http import create_client_session
 from .user import User
 
@@ -52,7 +51,7 @@ class Client:
         """
         user = User(self.session, *args, loop=self.loop, **kwargs)
 
-        if (code is not None):
+        if code is not None:
             if (None in [self.client_id, self.client_secret,
                          self.redirect_uri]):
                 raise ValueError("Not all client values set. Please make sure"
@@ -64,7 +63,7 @@ class Client:
                                                         self.redirect_uri,
                                                         code)
 
-        elif (token is not None):
+        elif token is not None:
             yield from user.set_token(token)
 
         return user
