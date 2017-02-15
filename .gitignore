@@ -3,3 +3,6 @@
 
 # Ignore tmp folder
 tmp/
+
+# Ignore PyCharm .idea folder:
+.idea
