@@ -24,6 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 class InstagramException(Exception):
     """Base exception class for instagram.py
 
@@ -32,12 +33,14 @@ class InstagramException(Exception):
     """
     pass
 
+
 class ClientException(InstagramException):
     """Exception that's thrown when an operation in the :class:`Client` fails.
 
     These are usually for exceptions that happened due to user input.
     """
     pass
+
 
 class HTTPException(InstagramException):
     """Exception that's thrown when an HTTP request operation fails.
@@ -66,9 +69,10 @@ class HTTPException(InstagramException):
 
         fmt = '{0.reason} (status code: {0.status})'
         if len(self.text):
-            fmt = fmt + ': {1}'
+            fmt += ': {1}'
 
         super().__init__(fmt.format(self.response, self.text))
+
 
 class Forbidden(HTTPException):
     """Exception that's thrown for when status code 403 occurs.
@@ -76,6 +80,7 @@ class Forbidden(HTTPException):
     Subclass of :exc:`HTTPException`
     """
     pass
+
 
 class NotFound(HTTPException):
     """Exception that's thrown for when status code 404 occurs.
@@ -94,6 +99,7 @@ class InvalidArgument(ClientException):
     :exc:`InstagramException`.
     """
     pass
+
 
 class LoginFailure(ClientException):
     """Exception that's thrown when the :meth:`Client.login` function
