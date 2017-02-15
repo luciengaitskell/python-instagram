@@ -29,9 +29,7 @@ import asyncio
 import json
 import sys
 import logging
-import inspect
 import weakref
-from random import randint as random_integer
 
 from .errors import HTTPException, Forbidden, NotFound, LoginFailure
 from . import __version__
@@ -70,7 +68,7 @@ class HTTPClient:
     def __init__(self, session=None, *, connector=None, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.connector = connector
-        if (session is None):
+        if session is None:
             self.session = create_client_session(connector=connector,
                                                  loop=self.loop)
         else:
@@ -97,19 +95,19 @@ class HTTPClient:
             'User-Agent': self.user_agent,
         }
 
-        requestData = kwargs.pop('params', {})
+        request_data = kwargs.pop('params', {})
 
         if (self.token is not None) and pass_token:
-            requestData['access_token'] = self.token
+            request_data['access_token'] = self.token
 
-        kwargs['params'] = requestData
+        kwargs['params'] = request_data
         kwargs['headers'] = headers
         with (yield from lock):
             for tries in range(5):
                 r = yield from self.session.request(method, url, **kwargs)
                 log.debug(self.REQUEST_LOG.format(method=method, url=url,
                                                   status=r.status,
-                                                  data=requestData))
+                                                  data=request_data))
                 try:
                     # even errors have text involved in them so this is safe to
                     #   call
