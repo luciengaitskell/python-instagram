@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import inspect
-from .http import HTTPClient
+from .http import HTTPClient, LoginFailure
 from .errors import HTTPException
 
 
@@ -102,7 +102,7 @@ class User:
     @asyncio.coroutine
     def update_user_info(self):
         data = yield from self.get_self()
-        __set_user_data(data)
+        self.__set_user_data(data)
         return data
 
     @asyncio.coroutine
